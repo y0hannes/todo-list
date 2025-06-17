@@ -1,5 +1,4 @@
 import { useState } from "react"
-import './view.css'
 
 const View = () => {
     const [tasks, setTasks] = useState([])
@@ -22,12 +21,17 @@ const View = () => {
         updated[index].isCompleted = !updated[index].isCompleted
         setTasks(updated)
     }
+
+    const handleRemove = (e, index) => {
+        e.preventDefault()
+        const updated = tasks.filter((_, i) => i !== index);
+        setTasks(updated);
+    }
     
     return (
         <>
             <form>
-                <input type="text" placeholder="Add task" value={newTask} onChange={(e) => setNewTask(e.target.value)}>
-                </input>
+                <input type="text" placeholder="Add task" value={newTask} onChange={(e) => setNewTask(e.target.value)} />
                 <button onClick={ AddTask }> Add </button>
             </form>
 
@@ -38,6 +42,7 @@ const View = () => {
                         <li key={index}>
                             {task.text}
                             <input type="checkbox" checked={task.isCompleted} onChange={() => changeStatus(index)} />
+                            <button onClick={(e) => handleRemove(e, index)}>remove</button>
                         </li>
                     ) : null
                 )}
