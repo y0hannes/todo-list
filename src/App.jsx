@@ -4,7 +4,7 @@ import View from './components/View.jsx'
 const App = () => {
     return (
         <>
-			<View />
+            <View />
         </>
     )
 }
