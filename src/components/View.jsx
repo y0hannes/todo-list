@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 const View = () => {
+  const idCounter = useRef(0)
   const [tasks, setTasks] = useState([])
   const [newTask, setNewTask] = useState("")
   const [isLoaded, setIsLoaded] = useState(false);
@@ -18,6 +19,9 @@ const View = () => {
       const data = JSON.parse(localStorage.getItem('todos'));
       if (data && Array.isArray(data)) {
         setTasks(data)
+
+        const maxId = data.reduce((max, task) => (task.id > max ? task.id : max), 0)
+        idCounter.current = maxId + 1
       }
     } catch (error) {
       console.log("Error loading data from local storage")
@@ -27,10 +31,20 @@ const View = () => {
   }
   ), [])
 
+  // check if all tasks are completed
+  useEffect(() => {
+    const allDone = tasks.length > 0 && tasks.every(task => task.completed);
+    if (allDone) {
+      alert('You’re all done! 🎉');
+    }
+  }, [tasks]);
+
+
   const AddTask = (e) => {
     e.preventDefault()
     if (newTask.trim() != "") {
       const task = {
+        id: idCounter.current++,
         text: newTask,
         isCompleted: false
       }
@@ -39,18 +53,21 @@ const View = () => {
     }
   }
 
-  const changeStatus = (e, index) => {
+  const changeStatus = (e, id) => {
     e.preventDefault()
     const updated = [...tasks]
-    updated[index].isCompleted = !updated[index].isCompleted
+    const index = updated.findIndex((task) => task.id == id)
+    if (index !== -1) {
+      updated[index] = { ...updated[index], isCompleted: !updated[index].isCompleted }
+    }
     setTasks(updated)
   }
 
-  const handleRemove = (e, index) => {
-    e.preventDefault()
-    const updated = tasks.filter((_, i) => i !== index);
+  const handleRemove = (e, id) => {
+    e.preventDefault();
+    const updated = tasks.filter(task => task.id !== id);
     setTasks(updated);
-  }
+  };
 
   return (
     <>
@@ -61,21 +78,21 @@ const View = () => {
 
       <p> List of Tasks </p>
       <ul>
-        {tasks.filter(t => !t.isCompleted).map((task, index) => (
-          <li key={index}>
+        {tasks.filter(t => !t.isCompleted).map((task) => (
+          <li key={task.id}>
             {task.text}
-            <button onClick={(e) => changeStatus(e, index)}>✅</button>
-            <button onClick={(e) => handleRemove(e, index)}>❌</button>
+            <button onClick={(e) => changeStatus(e, task.id)}>✅</button>
+            <button onClick={(e) => handleRemove(e, task.id)}>❌</button>
           </li>
         ))}
       </ul>
 
       <p>Completed Tasks</p>
       <ul>
-        {tasks.filter(t => t.isCompleted).map((task, index) => (
-          <li key={index}>
+        {tasks.filter(t => t.isCompleted).map((task) => (
+          <li key={task.id}>
             {task.text}
-            <button onClick={(e) => handleRemove(e, index)}>❌</button>
+            <button onClick={(e) => handleRemove(e, task.id)}>❌</button>
           </li>
         ))}
       </ul>
