@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 const View = () => {
   const idCounter = useRef(0)
   const [tasks, setTasks] = useState([])
   const [newTask, setNewTask] = useState("")
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [filter, setFilter] = useState("active")
 
   // save to localstorage 
   useEffect(() => {
@@ -33,11 +34,22 @@ const View = () => {
 
   // check if all tasks are completed
   useEffect(() => {
-    const allDone = tasks.length > 0 && tasks.every(task => task.completed);
+    const allDone = tasks.length > 0 && tasks.every(task => task.isCompleted);
     if (allDone) {
       alert('You’re all done! 🎉');
     }
   }, [tasks]);
+
+  // filtering tasks
+  const filteredTasks = useMemo(() => {
+    if (filter === "active") return tasks.filter(task => !task.isCompleted)
+    if (filter === "completed") return tasks.filter(task => task.isCompleted)
+    return tasks
+  }, [filter, tasks])
+
+  const changeFilter = (e) => {
+    setFilter(e.target.value)
+  }
 
 
   const AddTask = (e) => {
@@ -56,7 +68,7 @@ const View = () => {
   const changeStatus = (e, id) => {
     e.preventDefault()
     const updated = [...tasks]
-    const index = updated.findIndex((task) => task.id == id)
+    const index = updated.findIndex((task) => task.id === id)
     if (index !== -1) {
       updated[index] = { ...updated[index], isCompleted: !updated[index].isCompleted }
     }
@@ -76,23 +88,18 @@ const View = () => {
         <button type="submit"> Add </button>
       </form>
 
+      <select name="filter" value={filter} onChange={(e) => changeFilter(e)}>        <option value="all">All</option>
+        <option value="active">Active</option>
+        <option value="completed">Completed</option>
+      </select>
+
       <p> List of Tasks </p>
       <ul>
-        {tasks.filter(t => !t.isCompleted).map((task) => (
+        {filteredTasks.map((task) => (
           <li key={task.id}>
             {task.text}
-            <button onClick={(e) => changeStatus(e, task.id)}>✅</button>
-            <button onClick={(e) => handleRemove(e, task.id)}>❌</button>
-          </li>
-        ))}
-      </ul>
-
-      <p>Completed Tasks</p>
-      <ul>
-        {tasks.filter(t => t.isCompleted).map((task) => (
-          <li key={task.id}>
-            {task.text}
-            <button onClick={(e) => handleRemove(e, task.id)}>❌</button>
+            <button onClick={(e) => changeStatus(e, task.id)}>Done</button>
+            <button onClick={(e) => handleRemove(e, task.id)}>Delete</button>
           </li>
         ))}
       </ul>
