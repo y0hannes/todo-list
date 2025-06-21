@@ -1,4 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import TaskForm from "./TaskForm";
+import TaskList from "./TaskList";
+import FilterControl from "./FilterControl";
+import UndoRedoControls from "./UndoRedoControls";
 
 const View = () => {
   const idCounter = useRef(0);
@@ -10,9 +14,9 @@ const View = () => {
     present: [],
     future: [],
   });
+
   const tasks = history.present;
 
-  // Save to localStorage
   useEffect(() => {
     if (isLoaded) {
       localStorage.setItem("todos", JSON.stringify(history.present));
@@ -20,7 +24,6 @@ const View = () => {
     }
   }, [history, isLoaded]);
 
-  // Load from localStorage
   useEffect(() => {
     try {
       const savedTasks = JSON.parse(localStorage.getItem("todos"));
@@ -47,7 +50,6 @@ const View = () => {
     }
   }, []);
 
-  // Alert when all tasks are completed
   useEffect(() => {
     const allDone = tasks.length > 0 && tasks.every((task) => task.isCompleted);
     if (allDone) {
@@ -55,14 +57,12 @@ const View = () => {
     }
   }, [tasks]);
 
-  // Filtered task list
   const filteredTasks = useMemo(() => {
     if (filter === "active") return tasks.filter((task) => !task.isCompleted);
     if (filter === "completed") return tasks.filter((task) => task.isCompleted);
     return tasks;
   }, [filter, tasks]);
 
-  // Add new task
   const AddTask = (e) => {
     e.preventDefault();
     if (newTask.trim()) {
@@ -83,7 +83,6 @@ const View = () => {
     }
   };
 
-  // Toggle task completion
   const changeStatus = (e, id) => {
     e.preventDefault();
     const newPresent = tasks.map((task) =>
@@ -97,7 +96,6 @@ const View = () => {
     }));
   };
 
-  // Delete task
   const handleRemove = (e, id) => {
     e.preventDefault();
     const newPresent = tasks.filter((task) => task.id !== id);
@@ -109,7 +107,6 @@ const View = () => {
     }));
   };
 
-  // Undo
   const undo = () => {
     setHistory((prev) => {
       if (prev.past.length === 0) return prev;
@@ -123,7 +120,6 @@ const View = () => {
     });
   };
 
-  // Redo
   const redo = () => {
     setHistory((prev) => {
       if (prev.future.length === 0) return prev;
@@ -139,39 +135,15 @@ const View = () => {
 
   return (
     <>
-      <form onSubmit={AddTask}>
-        <input
-          type="text"
-          placeholder="Add task"
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-        />
-        <button type="submit">Add</button>
-      </form>
-
-      <select name="filter" value={filter} onChange={(e) => setFilter(e.target.value)}>
-        <option value="all">All</option>
-        <option value="active">Active</option>
-        <option value="completed">Completed</option>
-      </select>
-
-      <p>List of Tasks</p>
-      <ul>
-        {filteredTasks.map((task) => (
-          <li key={task.id}>
-            {task.text}
-            <button onClick={(e) => changeStatus(e, task.id)}>Done</button>
-            <button onClick={(e) => handleRemove(e, task.id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
-
-      <button onClick={undo} disabled={history.past.length === 0}>
-        Undo
-      </button>
-      <button onClick={redo} disabled={history.future.length === 0}>
-        Redo
-      </button>
+      <TaskForm newTask={newTask} setNewTask={setNewTask} onAddTask={AddTask} />
+      <FilterControl filter={filter} onChange={setFilter} />
+      <TaskList tasks={filteredTasks} onToggle={changeStatus} onRemove={handleRemove} />
+      <UndoRedoControls
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={history.past.length > 0}
+        canRedo={history.future.length > 0}
+      />
     </>
   );
 };
