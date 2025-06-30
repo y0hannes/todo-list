@@ -3,6 +3,7 @@ import TaskForm from "./TaskForm";
 import TaskList from "./TaskList";
 import FilterControl from "./FilterControl";
 import UndoRedoControls from "./UndoRedoControls";
+import Notification from "./Notification";
 
 const View = () => {
   const idCounter = useRef(0);
@@ -14,6 +15,7 @@ const View = () => {
     present: [],
     future: [],
   });
+  const [message, setMessage] = useState('')
 
   const tasks = history.present;
 
@@ -71,6 +73,8 @@ const View = () => {
         text: newTask,
         isCompleted: false,
       };
+      setMessage('note added')
+      setTimeout(() => setMessage(''), 3000)
       const newPresent = [...tasks, newEntry];
 
       setHistory((prev) => ({
@@ -135,6 +139,7 @@ const View = () => {
 
   return (
     <>
+      <Notification message={message} />
       <TaskForm newTask={newTask} setNewTask={setNewTask} onAddTask={AddTask} />
       <FilterControl filter={filter} onChange={setFilter} />
       <TaskList tasks={filteredTasks} onToggle={changeStatus} onRemove={handleRemove} />
